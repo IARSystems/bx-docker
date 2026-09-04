@@ -1,0 +1,45 @@
+# Ubuntu LTS as base image
+FROM ubuntu:24.04
+
+# These variables should be populated if building images outside the GitHub Actions workflow
+ARG TARGET
+ARG VERSION
+ARG LMSC_VERSION
+ARG LMSC_TAG
+
+# Container image description and details
+LABEL org.opencontainers.image.description="IAR Build Tools for ${TARGET} (CX)"
+LABEL org.opencontainers.image.ref_name="cx${TARGET}"
+LABEL org.opencontainers.image.source="https://iar.com"
+LABEL org.opencontainers.image.vendor="IAR Systems AB"
+LABEL org.opencontainers.image.version=${VERSION}
+
+# Container environment variables
+ENV LC_ALL=C \
+DEBIAN_FRONTEND="noninteractive" \
+PATH=/opt/iar/cx${TARGET}/${TARGET}/bin:/opt/iar/cx${TARGET}/common/bin:$PATH \
+CC=icc${TARGET} \
+CXX=icc${TARGET} \
+ASM=iasm${TARGET} \
+HOME=/workdir
+
+# Linux-specific dependencies and conveniences
+RUN apt-get update \
+&& apt-get install -y --no-install-recommends \
+ca-certificates \
+lbzip2 \
+wget \
+git \
+&& rm -rf /var/lib/apt/lists/*
+
+# Intall LSMC, IAR Build Tools and CMake
+RUN wget -q https://netstorage.iar.com/FileStore/STANDARD/001/004/${LMSC_TAG}/iar-lmsc-tools_${LMSC_VERSION}_amd64.deb \
+&& dpkg -i iar-lmsc-tools_${LMSC_VERSION}_amd64.deb \
+&& wget -qO- "https://github.com/iarsystems/${TARGET}/releases/download/${VERSION}/cx${TARGET}-${VERSION}-linux-x86_64-minimal.tar.bz2" | tar -I lbzip2 -x -C '/opt/iar' \
+&& rm -f /opt/iar/cx${TARGET}-${VERSION}/common/bin/lmsc-daemon \
+&& wget -qO- 'https://github.com/Kitware/CMake/releases/download/v4.4.3/cmake-4.4.3-linux-x86_64.tar.gz' | tar --strip-components=1 -xz -C '/usr/local' \
+&& cd /opt/iar \
+&& ln -s cx${TARGET}-${VERSION} cx${TARGET}
+
+# Set the default work directory to ${HOME}
+WORKDIR ${HOME}

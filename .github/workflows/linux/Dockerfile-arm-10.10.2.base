@@ -1,0 +1,14 @@
+# These variables should be populated if building images outside the GitHub Actions workflow
+ARG TARGET
+ARG VERSION
+ARG REGISTRY_REPO
+
+# Re-use minimal image as base layer
+FROM ${REGISTRY_REPO}/${TARGET}:${VERSION}-linux-minimal
+
+# Reuse previous arguments in this stage
+ARG TARGET
+ARG VERSION
+
+# Intall additional IAR Build Tools
+RUN wget -qO- "https://github.com/iarsystems/${TARGET}/releases/download/${VERSION}/cx${TARGET}-${VERSION}-linux-x86_64-base.tar.bz2" | tar -I lbzip2 --skip-old-files -x -C '/opt/iar'

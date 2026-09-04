@@ -1,0 +1,18 @@
+# These variables should be populated if building images outside the GitHub Actions workflow
+ARG TARGET
+ARG VERSION
+ARG VARIANT
+ARG TIMESTAMP
+ARG REGISTRY_REPO
+
+# Re-use base image as base layer
+FROM ${REGISTRY_REPO}/${TARGET}:${VERSION}-linux-base
+
+# Reuse previous arguments in this stage
+ARG TARGET
+ARG VERSION
+ARG VARIANT
+ARG TIMESTAMP
+
+# Intall Device support
+RUN wget -qO- "https://github.com/iarsystems/${TARGET}/releases/download/${VERSION}/cx${TARGET}-device-support-${VARIANT}-${VERSION}.${TIMESTAMP}.tar.bz2" | tar -I lbzip2 -x -C '/opt/iar'

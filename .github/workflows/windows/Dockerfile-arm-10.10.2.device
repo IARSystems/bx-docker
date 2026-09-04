@@ -1,0 +1,21 @@
+# These variables should be populated if building images outside the GitHub Actions workflow
+ARG TARGET
+ARG VERSION
+ARG VARIANT
+ARG TIMESTAMP
+ARG REGISTRY_REPO
+ARG WINVER
+
+# Re-use base image as base layer
+FROM ${REGISTRY_REPO}/${TARGET}:${VERSION}-windows-${WINVER}-base
+
+# Reuse previous arguments in this stage
+ARG TARGET
+ARG VERSION
+ARG VARIANT
+ARG TIMESTAMP
+
+# Intall Device support
+RUN Invoke-WebRequest -Uri "https://github.com/iarsystems/${env:TARGET}/releases/download/${env:VERSION}/cx${env:TARGET}-device-support-${env:VARIANT}-${env:VERSION}.${env:TIMESTAMP}.zip" -OutFile "device_support.zip"; \
+Expand-Archive "device_support.zip" -DestinationPath "C:/iar"; \
+Remove-Item "device_support.zip";
